@@ -4,6 +4,8 @@ import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import '../constants/app_constants.dart';
 import '../models/meat_sample.dart';
+import '../models/prediction_types.dart';
+import '_label_stats.dart';
 
 /// Machine Learning service for embedding extraction and k-NN classification
 class MLService {
@@ -103,8 +105,11 @@ class MLService {
     return convertedBytes;
   }
 
-  /// Predict using k-NN algorithm
-  PredictionResult predict(List<double> embedding, List<MeatSample> samples) {
+  /// Predict with multi-class support and enhanced confidence scores
+  MultiClassPredictionResult predict(
+    List<double> embedding,
+    List<MeatSample> samples,
+  ) {
     if (samples.isEmpty) {
       throw Exception('ยังไม่มีข้อมูลตัวอย่าง กรุณาเพิ่มข้อมูลก่อน');
     }
@@ -140,26 +145,54 @@ class MLService {
     final k = math.min(AppConstants.kNeighbors, samples.length);
     final kNearest = distances.take(k).toList();
 
-    // Count votes for each label
-    final votes = <String, int>{};
+    // Track stats for each label
+    final labelStats = <String, LabelStats>{};
+
+    // Collect statistics for each label
     for (final entry in kNearest) {
-      votes[entry.key.label] = (votes[entry.key.label] ?? 0) + 1;
+      final label = entry.key.label;
+      final distance = entry.value;
+
+      labelStats.putIfAbsent(label, () => LabelStats());
+      labelStats[label]!.addSample(distance);
     }
 
-    // Find label with most votes
-    final winner = votes.entries.reduce((a, b) => a.value > b.value ? a : b);
+    // Calculate confidence scores for each class
+    final predictions = <ClassPrediction>[];
 
-    // Calculate confidence
-    final confidence = winner.value / k;
+    for (final entry in labelStats.entries) {
+      final label = entry.key;
+      final stats = entry.value;
 
-    print(
-      '🎯 Prediction: ${winner.key} (${(confidence * 100).toStringAsFixed(1)}%)',
-    );
-    print('📊 Votes: $votes');
+      // Confidence calculation factors:
+      // 1. Vote ratio (how many times this label appears in k-NN)
+      final voteConfidence = stats.count / k;
 
-    return PredictionResult(
-      label: winner.key,
-      confidence: confidence,
+      // 2. Distance-based confidence (closer samples = higher confidence)
+      // Normalize distances to 0-1 range with exponential decay
+      final avgDistance = stats.averageDistance;
+      final distanceConfidence = math.exp(-avgDistance);
+
+      // Combined confidence score (weighted average)
+      final confidence = (voteConfidence * 0.7 + distanceConfidence * 0.3)
+          .clamp(0.0, 1.0);
+
+      // Only include predictions above threshold
+      if (confidence >= AppConstants.confidenceThreshold) {
+        predictions.add(ClassPrediction(label: label, confidence: confidence));
+      }
+    }
+
+    // Sort by confidence
+    predictions.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+    // Debug output
+    for (final pred in predictions) {
+      print('🎯 ${pred.label}: ${(pred.confidence * 100).toStringAsFixed(1)}%');
+    }
+
+    return MultiClassPredictionResult(
+      predictions: predictions,
       embedding: embedding,
     );
   }
@@ -188,7 +221,13 @@ class MLService {
     int correct = 0;
     for (final testSample in testSamples) {
       final prediction = predict(testSample.embedding, trainSamples);
-      if (prediction.label == testSample.label) {
+
+      // Check if any prediction matches the test sample label
+      final matched = prediction.predictions.any(
+        (p) => p.label == testSample.label,
+      );
+
+      if (matched) {
         correct++;
       }
     }

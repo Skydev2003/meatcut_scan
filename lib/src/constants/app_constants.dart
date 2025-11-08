@@ -13,6 +13,21 @@ class AppConstants {
   static const int kNeighbors = 5;
   static const double confidenceThreshold = 0.6;
 
+  // Quality Traits
+  static const List<String> qualityTraits = [
+    'มันแทรกน้อย',
+    'มันแทรกปานกลาง',
+    'มันแทรกมาก',
+    'เนื้อนุ่ม',
+    'เนื้อแน่น',
+    'สีแดงสด',
+    'สีแดงเข้ม',
+  ];
+
+  // Weights for confidence calculation
+  static const double votingWeight = 0.6; // Weight for k-NN voting
+  static const double distanceWeight = 0.4; // Weight for distance metric
+
   // Storage Keys
   static const String samplesKey = 'training_samples';
   static const String modelVersionKey = 'model_version';

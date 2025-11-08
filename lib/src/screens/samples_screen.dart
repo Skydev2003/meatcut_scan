@@ -280,6 +280,21 @@ class SamplesScreen extends ConsumerWidget {
                     fontSize: 12,
                   ),
                 ),
+                const SizedBox(height: 6),
+                // Show meat (animal) and the type/part after it, e.g. "ไก่ · น่อง" or "เนื้อ · สันใน"
+                Builder(
+                  builder: (context) {
+                    final parsed = _meatAndTypeFromLabel(sample.label);
+                    return Text(
+                      '${parsed['meat']} · ${parsed['type']}',
+                      style: const TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  },
+                ),
                 if (sample.createdAt != null)
                   Text(
                     _formatDate(sample.createdAt!),
@@ -349,5 +364,75 @@ class SamplesScreen extends ConsumerWidget {
     return '${date.day}/${date.month}/${date.year} '
         '${date.hour.toString().padLeft(2, '0')}:'
         '${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// Parse the label into meat (animal) and type/part.
+  /// Examples:
+  ///  - 'น่องไก่' -> {meat: 'ไก่', type: 'น่อง'}
+  ///  - 'สันใน' -> {meat: 'เนื้อ', type: 'สันใน'}
+  Map<String, String> _meatAndTypeFromLabel(String label) {
+    final l = label;
+
+    // Determine animal/meat
+    String meat = 'อื่นๆ';
+    if (l.contains('ไก่')) {
+      meat = 'ไก่';
+    } else if (l.contains('หมู')) {
+      meat = 'หมู';
+    } else if (l.contains('วัว') || l.contains('เนื้อ')) {
+      meat = 'เนื้อ';
+    }
+
+    // Determine type/part
+    final knownParts = ['สันใน', 'สันนอก', 'น่อง', 'สะโพก', 'อก', 'สะโพกไก่'];
+    String part = '';
+    for (final p in knownParts) {
+      if (l.contains(p)) {
+        part = p;
+        break;
+      }
+    }
+
+    // If not found, try removing known animal words and use the remainder
+    if (part.isEmpty) {
+      var remainder = l
+          .replaceAll('ไก่', '')
+          .replaceAll('หมู', '')
+          .replaceAll('เนื้อ', '')
+          .replaceAll('วัว', '')
+          .trim();
+      part = remainder.isNotEmpty ? remainder : 'ไม่ระบุ';
+    }
+
+    // If meat still unknown but part contains animal word, derive meat
+    if (meat == 'อื่นๆ') {
+      if (part.contains('ไก่')) meat = 'ไก่';
+      if (part.contains('หมู')) meat = 'หมู';
+    }
+
+    // Handle specific cases for สันนอก and สันใน
+    if (meat == 'อื่นๆ' && (part == 'สันใน' || part == 'สันนอก')) {
+      // If label specifically mentions หมู or วัว/เนื้อ, use that
+      if (l.contains('หมู')) {
+        meat = 'หมู';
+      } else if (l.contains('วัว') || l.contains('เนื้อ')) {
+        meat = 'เนื้อ';
+      }
+    }
+
+    // Combine meat and part for more specific labeling
+    if (part == 'สันนอก' || part == 'สันใน') {
+      return {
+        'meat': meat,
+        'type':
+            '$part${meat == 'หมู'
+                ? 'หมู'
+                : meat == 'เนื้อ'
+                ? 'วัว'
+                : ''}',
+      };
+    }
+
+    return {'meat': meat, 'type': part};
   }
 }

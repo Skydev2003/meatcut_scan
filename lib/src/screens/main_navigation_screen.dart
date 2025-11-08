@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/navigation_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'samples_screen.dart';
 import 'stats_screen.dart';
 import 'model_management_screen.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  ConsumerState<MainNavigationScreen> createState() =>
+      _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-
+class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   final List<IconData> _iconList = [
     Icons.home,
     Icons.dataset,
@@ -35,8 +36,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(navigationIndexProvider);
+
+    // Listen to navigation changes
+    ref.listen<int>(navigationIndexProvider, (previous, next) {
+      if (mounted && next != previous) {
+        setState(() {});
+      }
+    });
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: _screens[currentIndex],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.push('/camera');
@@ -82,15 +92,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ],
           );
         },
-        activeIndex: _currentIndex,
+        activeIndex: currentIndex,
         gapLocation: GapLocation.center,
         notchSmoothness: NotchSmoothness.softEdge,
         leftCornerRadius: 20,
         rightCornerRadius: 20,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          ref.read(navigationIndexProvider.notifier).state = index;
         },
         backgroundColor: AppTheme.darkCard,
         splashColor: AppTheme.primaryColor.withOpacity(0.2),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/app_constants.dart';
 import '../models/meat_sample.dart';
+import '../models/prediction_types.dart';
 import '../providers/ml_provider.dart';
 import '../providers/samples_provider.dart';
 import '../theme/app_theme.dart';
@@ -18,7 +19,7 @@ class PredictScreen extends ConsumerStatefulWidget {
 }
 
 class _PredictScreenState extends ConsumerState<PredictScreen> {
-  PredictionResult? _prediction;
+  MultiClassPredictionResult? _prediction;
   bool _isLoading = false;
   String? _selectedCategory;
   String? _selectedLabel;
@@ -160,31 +161,56 @@ class _PredictScreenState extends ConsumerState<PredictScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'ประเภทเนื้อ',
+                          'ผลการวิเคราะห์',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _prediction!.label,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                              ),
-                        ),
                         const SizedBox(height: 16),
-                        LinearProgressIndicator(
-                          value: _prediction!.confidence,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.secondaryColor,
+
+                        // Show all predictions above threshold
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _prediction!.predictions.length,
+                          itemBuilder: (context, index) {
+                            final pred = _prediction!.predictions[index];
+                            return ListTile(
+                              title: Text(
+                                pred.label,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              subtitle: LinearProgressIndicator(
+                                value: pred.confidence,
+                                backgroundColor: Colors.grey[300],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.secondaryColor.withOpacity(
+                                    0.5 + (0.5 * pred.confidence),
+                                  ),
+                                ),
+                              ),
+                              trailing: Text(
+                                '${(pred.confidence * 100).toStringAsFixed(1)}%',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: AppTheme.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        if (_prediction!.predictions.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text(
+                              'ไม่พบการทำนายที่มีความมั่นใจเพียงพอ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'ความมั่นใจ: ${(_prediction!.confidence * 100).toStringAsFixed(1)}%',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
                       ],
                     ),
                   ),

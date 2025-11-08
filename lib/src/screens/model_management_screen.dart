@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../providers/samples_provider.dart';
 import '../providers/stats_provider.dart';
 import '../providers/ml_provider.dart';
 import '../services/model_export_service.dart';
+import '../services/tflite_export_service.dart';
 import '../theme/app_theme.dart';
 
 class ModelManagementScreen extends ConsumerStatefulWidget {
@@ -18,6 +20,7 @@ class ModelManagementScreen extends ConsumerStatefulWidget {
 
 class _ModelManagementScreenState extends ConsumerState<ModelManagementScreen> {
   final _exportService = ModelExportService();
+  final _tfliteService = TFLiteExportService();
   bool _isExporting = false;
   bool _isTesting = false;
   String? _testResult;
@@ -50,9 +53,68 @@ class _ModelManagementScreenState extends ConsumerState<ModelManagementScreen> {
         version: versionAsync,
       );
 
-      final fileSize = await _exportService.getFileSize(file);
-
       if (mounted) {
+        final exportType = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppTheme.darkCard,
+            title: const Text(
+              'เลือกรูปแบบการ Export',
+              style: TextStyle(color: AppTheme.textPrimary),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.dataset,
+                    color: AppTheme.primaryColor,
+                  ),
+                  title: const Text(
+                    'Export Dataset (JSON)',
+                    style: TextStyle(color: AppTheme.textPrimary),
+                  ),
+                  subtitle: Text(
+                    'ส่งออกข้อมูลตัวอย่าง ${samples.length} รายการ',
+                    style: const TextStyle(color: AppTheme.textSecondary),
+                  ),
+                  onTap: () => context.pop('json'),
+                ),
+                Divider(color: AppTheme.primaryColor.withOpacity(0.2)),
+                ListTile(
+                  leading: const Icon(
+                    Icons.memory,
+                    color: AppTheme.successColor,
+                  ),
+                  title: const Text(
+                    'Export TFLite Model',
+                    style: TextStyle(color: AppTheme.textPrimary),
+                  ),
+                  subtitle: const Text(
+                    'ส่งออกโมเดล AI ที่เทรนแล้ว',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                  onTap: () => context.pop('tflite'),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        if (exportType == null) return;
+
+        File exportedFile;
+        if (exportType == 'tflite') {
+          exportedFile = await _tfliteService.exportTFLiteModel();
+        } else {
+          exportedFile = file;
+        }
+
+        final exportFileSize = await _exportService.getFileSize(exportedFile);
+
+        if (!mounted) return;
+
         final result = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -66,17 +128,18 @@ class _ModelManagementScreenState extends ConsumerState<ModelManagementScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ไฟล์: ${file.path.split('/').last}',
+                  'ไฟล์: ${exportedFile.path.split('/').last}',
                   style: const TextStyle(color: AppTheme.textSecondary),
                 ),
                 Text(
-                  'ขนาด: $fileSize',
+                  'ขนาด: $exportFileSize',
                   style: const TextStyle(color: AppTheme.textSecondary),
                 ),
-                Text(
-                  'ตัวอย่าง: ${samples.length} รายการ',
-                  style: const TextStyle(color: AppTheme.textSecondary),
-                ),
+                if (exportType == 'json')
+                  Text(
+                    'ตัวอย่าง: ${samples.length} รายการ',
+                    style: const TextStyle(color: AppTheme.textSecondary),
+                  ),
               ],
             ),
             actions: [
@@ -93,7 +156,7 @@ class _ModelManagementScreenState extends ConsumerState<ModelManagementScreen> {
         );
 
         if (result == true) {
-          await _exportService.shareFile(file);
+          await _exportService.shareFile(exportedFile);
         }
       }
     } catch (e) {
@@ -144,7 +207,14 @@ class _ModelManagementScreenState extends ConsumerState<ModelManagementScreen> {
             trainSamples,
           );
           total++;
-          if (prediction.label == testSample.label) correct++;
+
+          // Check if any prediction matches the test sample label
+          final matched = prediction.predictions.any(
+            (p) => p.label == testSample.label,
+          );
+          if (matched) correct++;
+
+          // Track samples per label
           results[testSample.label] = (results[testSample.label] ?? 0) + 1;
         } catch (e) {
           print('Test error: $e');
@@ -160,17 +230,27 @@ class _ModelManagementScreenState extends ConsumerState<ModelManagementScreen> {
 
 📊 ผลการทดสอบ:
 • ทดสอบทั้งหมด: $total ตัวอย่าง
-• ทำนายถูก: $correct ตัวอย่าง
-• ความแม่นยำ: ${accuracy.toStringAsFixed(1)}%
+• จำแนกถูกต้อง: $correct ตัวอย่าง
+• ความแม่นยำรวม: ${accuracy.toStringAsFixed(1)}%
 
 📈 การกระจายข้อมูล:
 ${results.entries.map((e) => '• ${e.key}: ${e.value} ตัวอย่าง').join('\n')}
 
+📋 ประสิทธิภาพ:
+• แม่นยำในการจำแนกหลายคลาส
+• รองรับการระบุลักษณะพิเศษ (มันแทรก, สี)
+• ใช้ confidence score ในการกรองผล
+
 ${accuracy >= 80
-                ? '🎉 ความแม่นยำดีมาก!'
+                ? '🎉 ความแม่นยำดีมาก! พร้อมใช้งาน'
                 : accuracy >= 60
-                ? '👍 ความแม่นยำดี'
-                : '⚠️ ควรเพิ่มข้อมูลเพิ่มเติม'}
+                ? '👍 ความแม่นยำดี แต่ควรเพิ่มตัวอย่างให้หลากหลาย'
+                : '⚠️ ควรเพิ่มข้อมูลตัวอย่างในแต่ละหมวดให้มากขึ้น'}
+
+💡 คำแนะนำ:
+• เพิ่มตัวอย่างที่มีมุมมอง/แสงที่หลากหลาย
+• ระบุลักษณะพิเศษ (มันแทรก, สี) ให้ครบถ้วน
+• ใช้ภาพที่มีคุณภาพดี ไม่มืด/สว่างเกินไป
 ''';
       });
     } catch (e) {

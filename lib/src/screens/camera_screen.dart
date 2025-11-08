@@ -112,6 +112,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
+                  // ignore: deprecated_member_use
                   Colors.black.withOpacity(0.5),
                   Colors.transparent,
                   Colors.transparent,
@@ -175,6 +176,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   Icon(
                     Icons.center_focus_strong,
                     size: 80,
+                    // ignore: deprecated_member_use
                     color: AppTheme.primaryColor.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),

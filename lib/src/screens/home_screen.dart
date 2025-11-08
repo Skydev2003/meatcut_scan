@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../models/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../providers/samples_provider.dart';
+import '../providers/navigation_provider.dart';
 import '../theme/app_theme.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -27,17 +28,21 @@ class HomeScreen extends ConsumerWidget {
                 pinned: true,
                 backgroundColor: Colors.transparent,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: ShaderMask(
-                    shaderCallback: (bounds) =>
-                        AppTheme.primaryGradient.createShader(bounds),
-                    child: const Text(
-                      'MeatCut AI',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  title: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/icon.png',
+                        height: 60,
+                        width: 250,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      ShaderMask(
+                        shaderCallback: (bounds) =>
+                            AppTheme.primaryGradient.createShader(bounds),
+                      ),
+                    ],
                   ),
                   centerTitle: true,
                 ),
@@ -66,7 +71,7 @@ class HomeScreen extends ConsumerWidget {
                     // Stats Card
                     samplesAsync.when(
                       data: (samples) =>
-                          _buildStatsCard(context, samples.length),
+                          _buildStatsCard(context, samples.length, ref),
                       loading: () => _buildLoadingCard(),
                       error: (e, _) => _buildErrorCard(e.toString()),
                     ),
@@ -174,10 +179,9 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsCard(BuildContext context, int sampleCount) {
+  Widget _buildStatsCard(BuildContext context, int sampleCount, WidgetRef ref) {
     return InkWell(
-      onTap: () {
-      },
+      onTap: () => ref.read(navigationIndexProvider.notifier).state = 1,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(24),

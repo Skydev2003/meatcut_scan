@@ -43,6 +43,7 @@ dependencies:
   # UI
   flutter_svg: ^2.0.10+1
   animated_bottom_navigation_bar: ^1.4.0
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -69,12 +70,12 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/logo2.png"
   min_sdk_android: 26
   
   # Android adaptive icon
   adaptive_icon_background: "#DC2626"
-  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground: "assets/images/logo2.png"
   
   # iOS
   remove_alpha_ios: true
@@ -82,7 +83,7 @@ flutter_launcher_icons:
   # Web
   web:
     generate: true
-    image_path: "assets/images/logo.png"
+    image_path: "assets/images/logo2.png"
     background_color: "#DC2626"
     theme_color: "#DC2626"
   
