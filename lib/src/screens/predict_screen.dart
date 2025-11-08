@@ -20,6 +20,7 @@ class PredictScreen extends ConsumerStatefulWidget {
 class _PredictScreenState extends ConsumerState<PredictScreen> {
   PredictionResult? _prediction;
   bool _isLoading = false;
+  String? _selectedCategory;
   String? _selectedLabel;
 
   @override
@@ -205,24 +206,49 @@ class _PredictScreenState extends ConsumerState<PredictScreen> {
                       const SizedBox(height: 8),
                       const Text('ช่วยให้แอปเรียนรู้และทำนายได้แม่นยำขึ้น'),
                       const SizedBox(height: 16),
+                      // Category dropdown
                       DropdownButtonFormField<String>(
-                        initialValue: _selectedLabel,
                         decoration: const InputDecoration(
-                          labelText: 'เลือกประเภทเนื้อ',
+                          labelText: 'ประเภทเนื้อ',
                           border: OutlineInputBorder(),
                         ),
-                        items: AppConstants.meatTypes.map((type) {
+                        items: AppConstants.meatCategories.map((category) {
                           return DropdownMenuItem(
-                            value: type,
-                            child: Text(type),
+                            value: category,
+                            child: Text(category),
                           );
                         }).toList(),
                         onChanged: (value) {
                           setState(() {
-                            _selectedLabel = value;
+                            _selectedCategory = value;
+                            _selectedLabel = null; // Reset part selection
                           });
                         },
                       ),
+                      const SizedBox(height: 16),
+
+                      // Part dropdown (only show if category selected)
+                      if (_selectedCategory != null)
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedLabel,
+                          decoration: const InputDecoration(
+                            labelText: 'ส่วนของเนื้อ',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: AppConstants.meatParts[_selectedCategory]!.map(
+                            (part) {
+                              return DropdownMenuItem(
+                                value: part,
+                                child: Text(part),
+                              );
+                            },
+                          ).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedLabel = value;
+                            });
+                          },
+                        ),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,

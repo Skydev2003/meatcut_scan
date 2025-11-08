@@ -103,7 +103,7 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
         );
       } else {
         // Email confirmation required - show success message
-        state = AppAuthState.error(
+        state = const AppAuthState.error(
           'สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี',
         );
         Future.delayed(const Duration(seconds: 3), () {

@@ -31,13 +31,18 @@ dependencies:
   # Camera & Image Picker
   camera: ^0.11.0+2
   image_picker: ^1.1.2
+  mobile_scanner: ^7.1.3
   
   # Storage
   shared_preferences: ^2.2.3
   path_provider: ^2.1.3
   
+  # Sharing
+  share_plus: ^7.2.2
+  
   # UI
   flutter_svg: ^2.0.10+1
+  animated_bottom_navigation_bar: ^1.4.0
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +54,9 @@ dev_dependencies:
   freezed: ^2.5.2
   json_serializable: ^6.8.0
   riverpod_generator: ^2.4.0
+  
+  # App Icon
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -56,3 +64,30 @@ flutter:
   assets:
     - assets/models/
     - assets/images/
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 26
+  
+  # Android adaptive icon
+  adaptive_icon_background: "#DC2626"
+  adaptive_icon_foreground: "assets/images/logo.png"
+  
+  # iOS
+  remove_alpha_ios: true
+  
+  # Web
+  web:
+    generate: true
+    image_path: "assets/images/logo.png"
+    background_color: "#DC2626"
+    theme_color: "#DC2626"
+  
+  # Windows
+  windows:
+    generate: true
+    image_path: "assets/images/logo.png"
+    icon_size: 48

@@ -13,7 +13,9 @@ class App extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'MeatCut Scan',
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

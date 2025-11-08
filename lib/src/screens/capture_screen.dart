@@ -79,17 +79,13 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Camera button
+              // Camera button - Open custom camera
               ElevatedButton.icon(
-                onPressed: () => _pickImage(ImageSource.camera),
+                onPressed: () => context.push('/camera'),
                 icon: const Icon(Icons.camera_alt, size: 32),
-                label: const Text(
-                  'ถ่ายภาพด้วยกล้อง',
-                  style: TextStyle(fontSize: 18),
-                ),
+                label: const Text('เปิดกล้อง', style: TextStyle(fontSize: 18)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 20),
-                  backgroundColor: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(height: 16),
