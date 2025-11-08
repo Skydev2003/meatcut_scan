@@ -72,11 +72,9 @@ class TFLitePredictionService {
 
       // Process results
       var results = Map<String, double>.fromIterables(
-        ['beef', 'pork', 'chicken', 'lamb', 'fish'], // Example labels
-        output[0].sublist(0, 5), // Take first 5 predictions
-      );
-
-      // Update statistics
+        ['beef_sirloin', 'pork_sirloin', 'beef_tenderloin', 'pork_tenderloin'],
+        output[0].sublist(0, 4), // Take predictions for our meat cut categories
+      ); // Update statistics
       _updateStats(results);
 
       return results;

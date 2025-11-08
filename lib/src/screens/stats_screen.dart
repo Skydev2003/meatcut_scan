@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/stats_provider.dart';
 import '../providers/samples_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/prediction_chart_new.dart';
 
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
@@ -356,6 +357,12 @@ class StatsScreen extends ConsumerWidget {
             _buildInfoRow('จำนวนการทำนาย', '${stats.totalPredictions} ครั้ง'),
             _buildInfoRow('ทำนายถูก', '${stats.correctPredictions} ครั้ง'),
             const SizedBox(height: 16),
+            // Add Prediction Chart
+            PredictionChart(
+              predictionCounts: stats.labelCounts,
+              accuracies: stats.labelAccuracies,
+            ),
+            const SizedBox(height: 24),
             // Accuracy Progress
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

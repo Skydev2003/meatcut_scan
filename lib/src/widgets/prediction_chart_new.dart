@@ -26,7 +26,6 @@ class PredictionChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Convert keys to Thai labels
     final thaiLabelCounts = Map<String, int>.fromEntries(
       predictionCounts.entries.map(
         (e) => MapEntry(_getThaiLabel(e.key), e.value),
@@ -34,33 +33,18 @@ class PredictionChart extends StatelessWidget {
     );
 
     final thaiLabelAccuracies = Map<String, double>.fromEntries(
-      accuracies.entries.map(
-        (e) => MapEntry(_getThaiLabel(e.key), e.value),
-      ),
+      accuracies.entries.map((e) => MapEntry(_getThaiLabel(e.key), e.value)),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16.0),
-          child: Text(
-            'สถิติการทำนาย',
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppTheme.darkCard,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppTheme.primaryColor.withOpacity(0.2),
-            ),
+            border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,9 +146,7 @@ class PredictionChart extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.darkCard,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppTheme.successColor.withOpacity(0.2),
-            ),
+            border: Border.all(color: AppTheme.successColor.withOpacity(0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +173,8 @@ class PredictionChart extends StatelessWidget {
                         sideTitles: SideTitles(
                           showTitles: true,
                           getTitlesWidget: (value, meta) {
-                            if (value < 0 || value >= thaiLabelAccuracies.length) {
+                            if (value < 0 ||
+                                value >= thaiLabelAccuracies.length) {
                               return const SizedBox();
                             }
                             return Padding(
@@ -199,7 +182,9 @@ class PredictionChart extends StatelessWidget {
                               child: RotatedBox(
                                 quarterTurns: 1,
                                 child: Text(
-                                  thaiLabelAccuracies.keys.elementAt(value.toInt()),
+                                  thaiLabelAccuracies.keys.elementAt(
+                                    value.toInt(),
+                                  ),
                                   style: const TextStyle(
                                     color: AppTheme.textPrimary,
                                     fontSize: 12,
@@ -255,7 +240,7 @@ class PredictionChart extends StatelessWidget {
                                     .toList()
                                     .indexOf(e.key)
                                     .toDouble(),
-                                e.value,
+                                e.value * 100,
                               ),
                             )
                             .toList(),
@@ -266,11 +251,11 @@ class PredictionChart extends StatelessWidget {
                           show: true,
                           getDotPainter: (spot, percent, barData, index) =>
                               FlDotCirclePainter(
-                            radius: 6,
-                            color: AppTheme.successColor,
-                            strokeWidth: 2,
-                            strokeColor: Colors.white,
-                          ),
+                                radius: 6,
+                                color: AppTheme.successColor,
+                                strokeWidth: 2,
+                                strokeColor: Colors.white,
+                              ),
                         ),
                       ),
                     ],
